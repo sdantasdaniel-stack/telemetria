@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<f:metadata>
+    <f:event type="preRenderView" listener="#{mapaBean.carregar}" />
+</f:metadata>
+
+<h:head>
+    <title>Mapa de Devices</title>
+    <script src="#{request.contextPath}/js/sockjs.min.js"></script>
+	<script src="#{request.contextPath}/js/stomp.min.js"></script>
+    <style>
+        #mapa { height: 600px; width: 100%; margin-top: 16px; }
+        .info-sem-devices { padding: 20px; color: #666; }
+    </style>
+</h:head>
+
+<h:body>
+
+    <h:form id="formMapa">
+
+        <p:messages id="mensagens" showDetail="true" autoUpdate="true"/>
+
+        <p:panel header="Mapa de Devices">
+
+            <p:button value="Voltar" outcome="/pages/admin/dashboard.xhtml" />
+            <p:commandButton value="Sair" action="#{loginBean.logout()}" />
+
+            <br/><br/>
+
+            <h:panelGroup rendered="#{empty mapaBean.devices}">
+                <p class="info-sem-devices">
+                    Nenhum device com localização disponível no momento.
+                </p>
+            </h:panelGroup>
+
+            <h:panelGroup rendered="#{not empty mapaBean.devices}">
+                <h:outputText value="Devices exibidos: #{mapaBean.devices.size()}" />
+            </h:panelGroup>
+
+            <div id="mapa"></div>
+
+        </p:panel>
+
+    </h:form>
+
+    <span id="devicesData" style="display:none">#{mapaBean.devicesJson}</span>
+
+    <script>
+        var markers = {};
+        var infoWindows = {};
+
+        function getIcone(status) {
+            return status === 'ONLINE'
+                ? 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                : 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        }
+
+        function getConteudoInfoWindow(device) {
+            return '<div>' +
+                   '<strong>' + device.nome + '</strong><br/>' +
+                   'ID: ' + device.identificador + '<br/>' +
+                   'Status: ' + device.status + '<br/>' +
+                   'Lat: ' + device.lat + '<br/>' +
+                   'Lng: ' + device.lng +
+                   '</div>';
+        }
+
+        function initMap() {
+            var devicesJson = document.getElementById('devicesData');
+            var devices = [];
+            if (devicesJson) {
+                try { devices = JSON.parse(devicesJson.textContent || devicesJson.innerText); }
+                catch(e) { devices = []; }
+            }
+
+            var centro = { lat: -8.0476, lng: -34.8770 };
+            if (devices.length > 0) {
+                centro = { lat: devices[0].lat, lng: devices[0].lng };
+            }
+
+            var map = new google.maps.Map(document.getElementById('mapa'), {
+                zoom: 15,
+                center: centro
+            });
+
+            devices.forEach(function(device) {
+                var marker = new google.maps.Marker({
+                    position: { lat: device.lat, lng: device.lng },
+                    map: map,
+                    title: device.nome,
+                    icon: getIcone(device.status)
+                });
+
+                var infoWindow = new google.maps.InfoWindow({
+                    content: getConteudoInfoWindow(device)
+                });
+
+                markers[device.id] = { marker: marker, data: device };
+                infoWindows[device.id] = infoWindow;
+
+                marker.addListener('click', function() {
+                    infoWindow.open(map, marker);
+                });
+            });
+
+            var socket = new SockJS('#{request.contextPath}/ws');
+            var stompClient = Stomp.over(socket);
+            stompClient.debug = null;
+
+            stompClient.connect({}, function () {
+            	stompClient.subscribe('/topic/devices', function (message) {
+            		
+            		console.log('>>> mensagem recebida no /topic/devices:', message.body);
+            		
+            	    if (message.body === 'reload') {
+            	        window.location.reload();
+            	        return;
+            	    }
+
+            	    var update = JSON.parse(message.body);
+            	    var entry = markers[update.id];
+            	    if (entry) {
+            	        entry.data.status = update.status;
+            	        entry.marker.setIcon(getIcone(update.status));
+            	        infoWindows[update.id].setContent(getConteudoInfoWindow(entry.data));
+            	    }
+            	});
+            });
+        }
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=#{mapaBean.googleMapsApiKey}&amp;callback=initMap"
+            async="async" defer="defer"></script>
+
+</h:body>
+
+</html>

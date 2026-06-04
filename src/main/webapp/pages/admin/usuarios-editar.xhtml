@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<f:metadata>
+    <f:viewParam name="id" value="#{adminUsuarioEditarBean.id}" />
+    <f:event type="preRenderView" listener="#{adminUsuarioEditarBean.carregar}" />
+</f:metadata>
+
+
+<h:head>
+    <title>Editar Usuário</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' &amp;&amp; e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</h:head>
+
+<h:body>
+
+    <h:form id="formEditarUsuario">
+
+        <p:messages id="mensagens" showDetail="true" autoUpdate="true"/>
+
+        <p:panel header="Editar Usuário">
+
+            <p:button value="Voltar" outcome="/pages/admin/usuarios.xhtml" />
+            <p:commandButton value="Sair" action="#{loginBean.logout()}" />
+
+            <br/><br/>
+
+            <p:outputLabel for="nome" value="Nome" />
+            <p:inputText id="nome" value="#{adminUsuarioEditarBean.nome}" />
+
+            <br/>
+
+            <p:outputLabel for="email" value="Email" />
+            <p:inputText id="email" value="#{adminUsuarioEditarBean.email}" />
+
+            <br/>
+
+            <p:outputLabel for="senha" value="Nova Senha (deixe em branco para manter)" />
+            <p:password id="senha" value="#{adminUsuarioEditarBean.senha}" feedback="false" />
+
+            <br/>
+
+            <p:outputLabel for="role" value="Role" />
+            <p:selectOneMenu id="role" value="#{adminUsuarioEditarBean.role}">
+                <f:selectItems value="#{adminUsuarioEditarBean.roles}"
+                               var="r"
+                               itemLabel="#{r}"
+                               itemValue="#{r}" />
+            </p:selectOneMenu>
+
+            <br/>
+
+            <p:outputLabel value="Empresas" />
+            <p:selectManyCheckbox value="#{adminUsuarioEditarBean.empresasIds}" layout="pageDirection">
+                <f:selectItems value="#{adminUsuarioEditarBean.empresasDisponiveis}"
+                               var="empresa"
+                               itemLabel="#{empresa.nome}"
+                               itemValue="#{empresa.id}" />
+            </p:selectManyCheckbox>
+
+            <br/>
+
+            <p:commandButton value="Salvar"
+                             action="#{adminUsuarioEditarBean.atualizar()}"
+                             update="formEditarUsuario" />
+
+            <p:button value="Cancelar" outcome="/pages/admin/usuarios.xhtml" />
+
+        </p:panel>
+
+    </h:form>
+
+</h:body>
+
+</html>

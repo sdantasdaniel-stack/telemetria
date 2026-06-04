@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<f:metadata>
+    <f:event type="preRenderView" listener="#{adminUsuarioBean.carregar}" />
+</f:metadata>
+
+<h:head>
+    <title>Usuários</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' &amp;&amp; e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</h:head>
+
+<h:body>
+
+    <h:form id="formUsuarios">
+
+        <p:messages id="mensagens" showDetail="true" autoUpdate="true"/>
+
+        <p:panel header="Gerenciar Usuários">
+
+            <p:button value="Voltar" outcome="/pages/admin/dashboard.xhtml" />
+            <p:commandButton value="Sair" action="#{loginBean.logout()}" />
+
+            <br/><br/>
+
+            <p:fieldset legend="Novo Usuário">
+                <p:outputLabel for="nome" value="Nome" />
+                <p:inputText id="nome" value="#{adminUsuarioBean.nome}" />
+
+                <br/>
+
+                <p:outputLabel for="email" value="Email" />
+                <p:inputText id="email" value="#{adminUsuarioBean.email}"
+                             autocomplete="off"/>
+
+                <br/>
+
+                <p:outputLabel for="senha" value="Senha" />
+                <p:password id="senha" value="#{adminUsuarioBean.senha}" feedback="false"
+                            autocomplete="off"/>
+
+                <br/>
+
+                <p:outputLabel for="role" value="Role" />
+                <p:selectOneMenu id="role" value="#{adminUsuarioBean.role}">
+                    <f:selectItem itemLabel="Selecione" itemValue="" />
+                    <f:selectItems value="#{adminUsuarioBean.roles}"
+                                   var="r"
+                                   itemLabel="#{r}"
+                                   itemValue="#{r}" />
+                </p:selectOneMenu>
+
+                <br/>
+
+                <p:outputLabel value="Empresas" />
+                <p:selectManyCheckbox value="#{adminUsuarioBean.empresasIds}" layout="pageDirection">
+                    <f:selectItems value="#{adminUsuarioBean.empresasDisponiveis}"
+                                   var="empresa"
+                                   itemLabel="#{empresa.nome}"
+                                   itemValue="#{empresa.id}" />
+                </p:selectManyCheckbox>
+
+                <br/>
+
+                <p:commandButton value="Cadastrar"
+                                 action="#{adminUsuarioBean.cadastrar()}"
+                                 update="formUsuarios" />
+            </p:fieldset>
+
+            <br/>
+
+            <p:dataTable value="#{adminUsuarioBean.usuarios}" var="usuario">
+
+                <p:column headerText="ID">
+                    <h:outputText value="#{usuario.id}" />
+                </p:column>
+
+                <p:column headerText="Nome">
+                    <h:outputText value="#{usuario.nome}" />
+                </p:column>
+
+                <p:column headerText="Email">
+                    <h:outputText value="#{usuario.email}" />
+                </p:column>
+
+                <p:column headerText="Role">
+                    <h:outputText value="#{usuario.role}" />
+                </p:column>
+
+                <p:column headerText="Ativo">
+                    <h:outputText value="#{usuario.ativo}" />
+                </p:column>
+
+                <p:column headerText="Empresas">
+                    <ui:repeat value="#{usuario.empresasIds}" var="empresaId">
+                        <h:outputText value="#{empresaId}" />
+                        <br/>
+                    </ui:repeat>
+                </p:column>
+
+                <p:column headerText="Ações">
+                    <p:button value="Editar"
+                              outcome="/pages/admin/usuarios-editar.xhtml">
+                        <f:param name="id" value="#{usuario.id}" />
+                    </p:button>
+                    <p:commandButton value="Desativar"
+                                     action="#{adminUsuarioBean.desativar(usuario)}"
+                                     update="formUsuarios"
+                                     rendered="#{usuario.ativo}" />
+                    <p:commandButton value="Reativar"
+                                     action="#{adminUsuarioBean.reativar(usuario)}"
+                                     update="formUsuarios"
+                                     rendered="#{!usuario.ativo}" />
+                    <p:commandButton value="Deletar"
+                                     action="#{adminUsuarioBean.deletar(usuario)}"
+                                     update="formUsuarios"
+                                     onclick="return confirm('Tem certeza? Esta ação não pode ser desfeita.')" />
+                </p:column>
+
+            </p:dataTable>
+
+        </p:panel>
+
+    </h:form>
+
+</h:body>
+
+</html>

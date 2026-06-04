@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<f:metadata>
+    <f:event type="preRenderView" listener="#{adminEmpresaEditarBean.carregar}" />
+</f:metadata>
+
+
+<h:head>
+    <title>Editar Empresa</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' &amp;&amp; e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</h:head>
+
+<h:body>
+
+    <h:form id="formEditarEmpresa">
+
+        <p:messages id="mensagens" showDetail="true" autoUpdate="true"/>
+
+        <p:panel header="Editar Empresa">
+
+            <p:button value="Voltar" outcome="/pages/admin/empresas.xhtml" />
+            <p:commandButton value="Sair" action="#{loginBean.logout()}" />
+
+            <br/><br/>
+
+            <p:outputLabel for="nome" value="Nome" />
+            <p:inputText id="nome" value="#{adminEmpresaEditarBean.nome}" />
+
+            <br/>
+
+            <p:outputLabel for="cnpj" value="CNPJ" />
+            <p:inputText id="cnpj" value="#{adminEmpresaEditarBean.cnpj}" />
+
+            <br/>
+
+            <p:outputLabel for="email" value="Email" />
+            <p:inputText id="email" value="#{adminEmpresaEditarBean.email}" />
+
+            <br/>
+
+            <p:commandButton value="Salvar"
+                             action="#{adminEmpresaEditarBean.atualizar()}"
+                             update="formEditarEmpresa" />
+
+            <p:button value="Cancelar" outcome="/pages/admin/empresas.xhtml" />
+
+        </p:panel>
+
+    </h:form>
+
+</h:body>
+
+</html>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+      
+<f:metadata>
+    <f:event type="preRenderView" listener="#{loginBean.redirecionarSeLogado}" />
+</f:metadata>
+<h:head>
+    <title>Login</title>
+</h:head>
+
+<h:body>
+
+    <!-- h:form é obrigatório para qualquer formulário JSF/PrimeFaces -->
+    <!-- todos os componentes que precisam de postback devem estar dentro de um h:form -->
+    <h:form id="formLogin">
+
+        <!-- p:panel cria um painel com título centralizado na página -->
+        <p:panel header="Acesso ao Sistema">
+
+            <!-- p:messages exibe as mensagens de erro adicionadas pelo Bean -->
+            <!-- autoUpdate="true" atualiza automaticamente sem precisar declarar no update do botão -->
+            <p:messages id="mensagens" showDetail="true" autoUpdate="true"/>
+
+            <!-- p:outputLabel vincula o label ao campo pelo atributo for -->
+            <p:outputLabel for="email" value="Email"/>
+
+            <!-- p:inputText vincula o campo ao atributo email do Bean pela EL -->
+            <!-- required="true" valida no lado do servidor antes de chamar o Bean -->
+            <!-- requiredMessage define a mensagem exibida se o campo estiver vazio -->
+            <p:inputText id="email"
+                         value="#{loginBean.email}"
+                         required="true"
+                         requiredMessage="O email é obrigatório"/>
+
+            <br/>
+
+            <p:outputLabel for="senha" value="Senha"/>
+
+            <!-- p:password esconde os caracteres digitados -->
+            <!-- feedback="false" desativa o medidor de força da senha -->
+            <p:password id="senha"
+                        value="#{loginBean.senha}"
+                        required="true"
+                        requiredMessage="A senha é obrigatória"
+                        feedback="false"/>
+
+            <br/>
+
+            <!-- p:commandButton dispara o método login() do Bean ao ser clicado -->
+            <!-- action chama o método — o retorno do método define para onde navegar -->
+            <!-- update="mensagens" atualiza o componente de mensagens se houver erro -->
+            <p:commandButton value="Entrar"
+                             action="#{loginBean.login()}"
+                             update="mensagens"/>
+
+        </p:panel>
+
+    </h:form>
+
+</h:body>
+
+</html>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<f:metadata>
+    <f:event type="preRenderView" listener="#{userDeviceBean.carregar}" />
+</f:metadata>
+
+<h:head>
+    <title>Meus Devices</title>
+    <script src="#{request.contextPath}/js/sockjs.min.js"></script>
+	<script src="#{request.contextPath}/js/stomp.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' &amp;&amp; e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                }
+            });
+
+            var socket = new SockJS('#{request.contextPath}/ws');
+            var stompClient = Stomp.over(socket);
+            stompClient.debug = null;
+
+            stompClient.connect({}, function (frame) {
+
+                stompClient.subscribe('/topic/empresas', function (message) {
+                    atualizarEmpresas();
+                });
+
+                stompClient.subscribe('/topic/devices', function () {
+                    atualizarDevices();
+                });
+            });
+        });
+    </script>
+</h:head>
+
+<h:body>
+
+    <h:form id="formDevices">
+
+        <p:messages id="mensagens" showDetail="true" autoUpdate="true"/>
+
+        <p:remoteCommand name="atualizarEmpresas"
+                         action="#{userDeviceBean.carregar}"
+                         update="formDevices" />
+
+        <p:remoteCommand name="atualizarDevices"
+                         action="#{userDeviceBean.carregarDevices}"
+                         update="formDevices" />
+
+        <p:panel header="Meus Devices">
+
+            <h:outputText value="Bem vindo, #{loginBean.nomeUsuario}!" />
+
+            <br/><br/>
+
+            <p:button value="Mapa" outcome="/pages/mapa.xhtml" />
+            <p:commandButton value="Sair" action="#{loginBean.logout()}" />
+
+            <br/><br/>
+
+            <p:outputLabel for="empresa" value="Selecione a empresa:" />
+            <p:selectOneMenu id="empresa"
+                             value="#{userDeviceBean.empresaIdSelecionada}">
+                <f:selectItem itemLabel="Selecione uma empresa" itemValue="" />
+                <f:selectItems value="#{userDeviceBean.empresasDoUsuario}"
+                               var="empresa"
+                               itemLabel="#{empresa.nome}"
+                               itemValue="#{empresa.id}" />
+            </p:selectOneMenu>
+
+            <p:commandButton value="Carregar Devices"
+                             action="#{userDeviceBean.selecionarEmpresa()}"
+                             update="formDevices" />
+
+            <br/><br/>
+
+            <p:fieldset legend="Novo Device"
+                        rendered="#{userDeviceBean.empresaIdSelecionada != null}">
+
+                <p:outputLabel for="nome" value="Nome" />
+                <p:inputText id="nome" value="#{userDeviceBean.nome}" />
+
+                <p:outputLabel for="identificador" value="Identificador" />
+                <p:inputText id="identificador" value="#{userDeviceBean.identificador}" />
+
+                <p:outputLabel for="latitude" value="Latitude (opcional)" />
+                <p:inputText id="latitude" value="#{userDeviceBean.latitude}" />
+
+                <p:outputLabel for="longitude" value="Longitude (opcional)" />
+                <p:inputText id="longitude" value="#{userDeviceBean.longitude}" />
+
+                <p:commandButton value="Cadastrar"
+                                 action="#{userDeviceBean.cadastrar()}"
+                                 update="formDevices" />
+
+            </p:fieldset>
+
+            <br/>
+
+            <p:dataTable value="#{userDeviceBean.devices}"
+                         var="device"
+                         rendered="#{userDeviceBean.empresaIdSelecionada != null}">
+
+                <p:column headerText="Nome">
+                    <h:outputText value="#{device.nome}" />
+                </p:column>
+
+                <p:column headerText="Identificador">
+                    <h:outputText value="#{device.identificador}" />
+                </p:column>
+
+                <p:column headerText="Status">
+                    <h:outputText value="#{device.status}" />
+                </p:column>
+
+                <p:column headerText="Ativo">
+                    <h:outputText value="#{device.ativo}" />
+                </p:column>
+
+            </p:dataTable>
+
+        </p:panel>
+
+    </h:form>
+
+</h:body>
+
+</html>
