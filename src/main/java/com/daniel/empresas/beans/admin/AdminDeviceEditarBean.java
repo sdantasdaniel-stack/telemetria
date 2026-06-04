@@ -12,8 +12,16 @@ import com.daniel.empresas.service.DeviceService;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 
+/**
+ * Bean de edição de dispositivos no painel administrativo.
+ * Carrega os dados de um device existente e permite atualizar suas informações.
+ *
+ * Escopo de sessão mantido para preservar o estado entre requisições JSF
+ * durante o fluxo de edição.
+ */
+
 @Component("adminDeviceEditarBean")
-// @SessionScope — o Bean vive durante toda a sessão do usuario
+
 @SessionScope
 public class AdminDeviceEditarBean implements Serializable {
 

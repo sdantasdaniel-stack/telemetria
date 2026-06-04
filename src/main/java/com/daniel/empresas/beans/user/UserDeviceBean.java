@@ -106,6 +106,23 @@ public class UserDeviceBean implements Serializable {
         }
     }
 
+    public String getEmpresasDoUsuarioJson() {
+    if (empresasDoUsuario == null || empresasDoUsuario.isEmpty()) return "[]";
+    StringBuilder sb = new StringBuilder("[");
+    for (int i = 0; i < empresasDoUsuario.size(); i++) {
+        sb.append(empresasDoUsuario.get(i).id());
+        if (i < empresasDoUsuario.size() - 1) sb.append(",");
+    }
+    sb.append("]");
+    return sb.toString();
+    }
+
+    public void carregarDevices() {
+    if (empresaIdSelecionada != null) {
+        devices = deviceService.listarAtivosPorEmpresa(empresaIdSelecionada);
+    }
+    }
+
     // busca as empresas do usuário logado lendo o token JWT do cookie
     private List<EmpresaResponseDTO> getEmpresasDoUsuarioLogado() {
         HttpServletRequest httpRequest = (HttpServletRequest)

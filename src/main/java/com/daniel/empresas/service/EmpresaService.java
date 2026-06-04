@@ -187,7 +187,7 @@ public class EmpresaService {
         empresaRepository.delete(empresa);
 
         // notifica os clientes conectados via WebSocket — caminho direto para teste da Hipótese A
-        empresaNotificador.notificar();
+        empresaNotificador.notificar(id, "deletada");
     }
 
     public void desativar(Long id) {
@@ -198,7 +198,7 @@ public class EmpresaService {
         }
         empresa.setAtivo(false);
         empresaRepository.save(empresa);
-        empresaNotificador.notificar();
+        empresaNotificador.notificar(id, "desativada");
     }
 
     public void reativar(Long id) {
@@ -209,7 +209,7 @@ public class EmpresaService {
         }
         empresa.setAtivo(true);
         empresaRepository.save(empresa);
-        empresaNotificador.notificar();
+        empresaNotificador.notificar(id, "reativada");
     }
 
     // busca apenas empresas ativas — usado pelo endpoint da API para role USER

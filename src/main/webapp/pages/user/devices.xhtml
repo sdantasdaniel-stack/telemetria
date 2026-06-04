@@ -12,12 +12,13 @@
 <h:head>
     <title>Meus Devices</title>
     <script src="#{request.contextPath}/js/sockjs.min.js"></script>
-	<script src="#{request.contextPath}/js/stomp.min.js"></script>
+    <script src="#{request.contextPath}/js/stomp.min.js"></script>
     <script>
+    //<![CDATA[
         document.addEventListener('DOMContentLoaded', function () {
 
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' &amp;&amp; e.target.tagName !== 'TEXTAREA') {
+                if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
                     e.preventDefault();
                 }
             });
@@ -29,6 +30,18 @@
             stompClient.connect({}, function (frame) {
 
                 stompClient.subscribe('/topic/empresas', function (message) {
+                    var update;
+                    try { update = JSON.parse(message.body); } catch(e) { return; }
+
+                    var spanEmpresas = document.getElementById('empresasDoUsuario');
+                    if (!spanEmpresas) return;
+
+                    var idsDoUsuario;
+                    try { idsDoUsuario = JSON.parse(spanEmpresas.textContent || spanEmpresas.innerText); }
+                    catch(e) { return; }
+
+                    if (idsDoUsuario.indexOf(update.id) === -1) return;
+
                     atualizarEmpresas();
                 });
 
@@ -37,10 +50,13 @@
                 });
             });
         });
+    //]]>
     </script>
 </h:head>
 
 <h:body>
+
+    <span id="empresasDoUsuario" style="display:none">#{userDeviceBean.empresasDoUsuarioJson}</span>
 
     <h:form id="formDevices">
 

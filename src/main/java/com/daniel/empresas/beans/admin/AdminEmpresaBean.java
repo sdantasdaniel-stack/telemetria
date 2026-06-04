@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import com.daniel.empresas.dto.request.EmpresaRequestDTO;
@@ -15,27 +14,20 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 
-//Para que a sessão fosse 100% stateless, nao poderia usar JSF primefaces, pois ele  guarda o estado da view na sessão.
-
-// gerenciado pelo Spring — acessível nas páginas xhtml pelo nome "adminEmpresaBean"
+/**
+ * Bean JSF do painel administrativo para gerenciamento de empresas.
+ * Responsável por listar, cadastrar, desativar, reativar e deletar empresas.
+ *
+ * Escopo de view: o estado é preservado enquanto o usuário permanecer na mesma página.
+ */
 @Component("adminEmpresaBean")
-
-//O bean vive enquanto você estiver na mesma página web
 @ViewScoped
 public class AdminEmpresaBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    //É um @Component com @RequestScope — gerenciado pelo JSF junto com o Spring
-    //O JSF instancia o bean primeiro, depois o Spring injeta as dependências
-    //Por causa dessa "dupla gestão", o @RequiredArgsConstructor pode não funcionar corretamente
-    //O @Autowired por campo é mais seguro nesse contexto
     @Autowired
     private EmpresaService empresaService;
-
-    // injetado apenas para o teste da Hipótese A — logar o hash e comparar com o do Notificador e do Controller REST
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
 
     // lista de empresas exibida na tabela da página
     private List<EmpresaResponseDTO> empresas;
@@ -48,28 +40,29 @@ public class AdminEmpresaBean implements Serializable {
     private String cnpj;
     private String email;
 
-    // carrega a lista de empresas do banco — chamado ao entrar na página
-    // f:event type="preRenderView" no xhtml chama esse método antes de renderizar
+    /**
+     * Carrega a lista de empresas do banco de dados.
+     * Chamado via f:event type="preRenderView" no XHTML antes de renderizar a página.
+     */
     public void carregar() {
         empresas = empresaService.listarTodas();
     }
 
-    // verifica se o email tem formato mínimo válido
-    // exige pelo menos um caractere antes do @ e pelo menos um depois
+    /**
+     * Valida formato mínimo de e-mail: exige pelo menos um caractere antes e depois do '@'.
+     */
     private boolean emailValido(String email) {
-        // garante que email não é nulo ou espaços em brancos
         if (email == null || email.isBlank()) return false;
-            int arroba = email.indexOf('@');
-            // O método indexOf() retorna -1 por padrão de projeto do Java para indicar que o caractere não foi encontrado e o return volta falso
-            // arroba deve existir, ter pelo menos 1 caractere antes e pelo menos 1 depois
-            // arroba > 0: Garante que o @ não é o primeiro caractere, ou seja, exige que haja pelo menos uma letra antes dele
-            //arroba < email.length() - 1: Garante que o @ não é o último caractere, exigindo que haja pelo menos uma letra ou domínio depois dele
-            return arroba > 0 && arroba < email.length() - 1;
+        int arroba = email.indexOf('@');
+        return arroba > 0 && arroba < email.length() - 1;
     }
 
-    // cadastra uma nova empresa com os dados do formulário
+    /**
+     * Cadastra uma nova empresa com os dados do formulário.
+     * A validação é feita no Bean (e não via required="true" no XHTML) para evitar
+     * que as constraints do Bean Validation disparem antes do fluxo esperado.
+     */
     public void cadastrar() {
-        // validação manual — substitui o required="true" do xhtml para tentar resolver problema das constraints dispararem antes
         if (nome == null || nome.isBlank()) {
             addMensagemErro("O nome é obrigatório");
             return;
@@ -96,8 +89,6 @@ public class AdminEmpresaBean implements Serializable {
     // desativa a empresa selecionada
     public void desativar(EmpresaResponseDTO empresa) {
         try {
-            // loga o hash do template injetado no Bean JSF — comparar com o hash do Notificador e do Controller REST
-            System.out.println(">>> JSF Bean template hash: " + System.identityHashCode(messagingTemplate));
             empresaService.desativar(empresa.id());
             carregar();
             addMensagemSucesso("Empresa desativada com sucesso");
