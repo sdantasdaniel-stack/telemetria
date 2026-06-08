@@ -65,6 +65,7 @@ A aplicação estará disponível em:
 
 ## Estrutura do Projeto
 
+```
 src/
 ├── main/
 │   ├── java/com/daniel/empresas/
@@ -88,6 +89,7 @@ src/
 │       ├── WEB-INF/
 │       │   └── web.xml
 │       └── login.xhtml
+```
 
 ## Perfis de Acesso
 
