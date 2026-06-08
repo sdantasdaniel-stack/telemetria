@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import org.springframework.web.context.annotation.SessionScope;
 
 import com.daniel.empresas.dto.request.EmpresaRequestDTO;
@@ -13,9 +12,15 @@ import com.daniel.empresas.service.EmpresaService;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 
+/**
+ * Bean JSF do painel administrativo para edição de empresas existentes.
+ * Carrega os dados de uma empresa pelo ID recebido via parâmetro de URL e
+ * permite atualizar suas informações.
+ *
+ * Escopo de sessão mantido para preservar o estado entre requisições JSF
+ * durante o fluxo de edição.
+ */
 @Component("adminEmpresaEditarBean")
-//@SessionScope — o Bean vive durante toda a sessão do usuario
-
 @SessionScope
 public class AdminEmpresaEditarBean implements Serializable {
 
@@ -29,18 +34,17 @@ public class AdminEmpresaEditarBean implements Serializable {
     private String nome;
     private String cnpj;
     private String email;
-    
 
-    // carrega os dados da empresa pelo ID recebido da URL
+    /**
+     * Carrega os dados da empresa pelo ID recebido como parâmetro de URL.
+     * Deve ser chamado via f:event type="preRenderView" no XHTML.
+     */
     public void carregar() {
-        // lê o parâmetro id diretamente da URL da requisição
         String idParam = FacesContext.getCurrentInstance()
                 .getExternalContext()
                 .getRequestParameterMap()
                 .get("id");
-        
-        
-        
+
         if (idParam != null && !idParam.isBlank()) {
             this.id = Long.parseLong(idParam);
             var empresa = empresaService.buscarPorId(this.id);
@@ -49,21 +53,20 @@ public class AdminEmpresaEditarBean implements Serializable {
             this.email = empresa.email();
         }
     }
-    
-    // verifica se o email tem formato mínimo válido
-    // exige pelo menos um caractere antes do @ e pelo menos um depois
-    private boolean emailValido(String email) {
-    	// garante que email não é nulo ou espaços em brancos
-    	if (email == null || email.isBlank()) return false;
-    		int arroba = email.indexOf('@');
-    		// O método indexOf() retorna -1 por padrão de projeto do Java para indicar que o caractere não foi encontrado e o return volta falso
-    		// arroba deve existir, ter pelo menos 1 caractere antes e pelo menos 1 depois
-    		// arroba > 0: Garante que o @ não é o primeiro caractere, ou seja, exige que haja pelo menos uma letra antes dele
-    		//arroba < email.length() - 1: Garante que o @ não é o último caractere, exigindo que haja pelo menos uma letra ou domínio depois dele
-    		return arroba > 0 && arroba < email.length() - 1;
- }
 
-    // valida e salva as alterações — redireciona para listagem se sucesso
+    /**
+     * Valida formato mínimo de e-mail: exige pelo menos um caractere antes e depois do '@'.
+     */
+    private boolean emailValido(String email) {
+        if (email == null || email.isBlank()) return false;
+        int arroba = email.indexOf('@');
+        return arroba > 0 && arroba < email.length() - 1;
+    }
+
+    /**
+     * Valida e salva as alterações da empresa.
+     * @return caminho de redirecionamento para a listagem em caso de sucesso, ou null se houver erro de validação.
+     */
     public String atualizar() {
         if (nome == null || nome.isBlank()) {
             addMensagemErro("O nome é obrigatório");
@@ -79,8 +82,7 @@ public class AdminEmpresaEditarBean implements Serializable {
         }
         if (!emailValido(email)) {
             addMensagemErro("Digite um email válido");
-            return null; 
-        
+            return null;
         }
         try {
             EmpresaRequestDTO dto = new EmpresaRequestDTO(nome, cnpj, email);

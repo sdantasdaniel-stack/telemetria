@@ -11,7 +11,9 @@ import com.daniel.empresas.exception.EmpresaNaoEncontradaException;
 import com.daniel.empresas.exception.EstadoInvalidoException;
 import com.daniel.empresas.exception.IdentificadorJaCadastradoException;
 import com.daniel.empresas.model.Device;
+import com.daniel.empresas.model.Empresa;
 import com.daniel.empresas.model.StatusEnum;
+import com.daniel.empresas.model.Usuario;
 import com.daniel.empresas.repository.DeviceRepository;
 import com.daniel.empresas.repository.EmpresaRepository;
 import com.daniel.empresas.websocket.DeviceNotificador;
@@ -152,6 +154,8 @@ public class DeviceService {
         // salva a Entity atualizada no banco — o Hibernate executa o UPDATE
         Device deviceAtualizado = deviceRepository.save(device);
 
+        deviceNotificador.notificarAtualizacao(deviceAtualizado);
+
         // converte a Entity atualizada para DTO e retorna para o Controller
         return toDTO(deviceAtualizado);
     }
@@ -161,12 +165,14 @@ public class DeviceService {
     // método especial usado pelo WebSocket para atualizar o status online/offline do device em tempo real
     // não precisa de DTO — só recebe o ID e o novo status
     public void atualizarStatus(Long id, StatusEnum status) {
-        Device device = deviceRepository.findById(id)
+        System.out.println(">>> atualizarStatus chamado: id=" + id + " status=" + status);
+            Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new DeviceNaoEncontradoException("Device não encontrado com o id: " + id));
-        device.setStatus(status);
-        deviceRepository.save(device);
-        // notifica todos os browsers conectados sobre a mudança de status
-        deviceNotificador.notificar(id, status);
+            device.setStatus(status);
+            deviceRepository.save(device);
+            System.out.println(">>> chamando deviceNotificador.notificar");
+            deviceNotificador.notificar(id, status);
+            System.out.println(">>> deviceNotificador.notificar executado");
     }
 
     // versão filtrada para o role USER — retorna apenas devices ativos da empresa
@@ -194,17 +200,32 @@ public class DeviceService {
     public List<DeviceResponseDTO> listarAtivos() {
     	return deviceRepository.findAll()
     			.stream()
-    			.filter(Device::isAtivo)
+    			.filter(d -> d.isAtivo() && d.getEmpresa() != null && d.getEmpresa().isAtivo())
     			.map(this::toDTO)
     			.toList();
     }
 
+    public List<DeviceResponseDTO> listarAtivosPorUsuario(Usuario usuario) {
+    List<Long> empresasDoUsuario = usuario.getEmpresas().stream()
+            .filter(Empresa::isAtivo)
+            .map(Empresa::getId)
+            .toList();
+
+    return deviceRepository.findAll()
+            .stream()
+            .filter(d -> d.isAtivo()
+                    && d.getEmpresa() != null
+                    && empresasDoUsuario.contains(d.getEmpresa().getId()))
+            .map(this::toDTO)
+            .toList();
+    }
+
     // deleta o device permanentemente do banco
     public void deletar(Long id) {
-        Device device = deviceRepository.findById(id)
-                .orElseThrow(() -> new DeviceNaoEncontradoException("Device não encontrado com o id: " + id));
-        deviceRepository.delete(device);
-        deviceNotificador.notificarReload();
+    Device device = deviceRepository.findById(id)
+        .orElseThrow(() -> new DeviceNaoEncontradoException("Device não encontrado com o id: " + id));
+    deviceRepository.delete(device);
+    deviceNotificador.notificarEstado(id, "deletado");
     }
 
     public void desativar(Long id) {
@@ -215,9 +236,9 @@ public class DeviceService {
         }
         device.setAtivo(false);
         deviceRepository.save(device);
-        System.out.println(">>> desativar: chamando notificarReload");
-        deviceNotificador.notificarReload();
-        System.out.println(">>> desativar: notificarReload retornou");
+        
+        deviceNotificador.notificarEstado(id, "desativado");
+        
     }
 
     public void reativar(Long id) {
@@ -227,7 +248,7 @@ public class DeviceService {
             throw new EstadoInvalidoException("Device já está ativo");
         }
         device.setAtivo(true);
-        deviceRepository.save(device);
-        deviceNotificador.notificarReload();
+        Device deviceSalvo = deviceRepository.save(device);
+        deviceNotificador.notificarAtualizacao(deviceSalvo);
     }
 }

@@ -130,8 +130,10 @@ public class UsuarioService {
         usuario.setNome(dto.nome());
         usuario.setEmail(dto.email());
 
-        // recriptografa a senha se ela foi alterada
-        usuario.setSenha(passwordEncoder.encode(dto.senha()));
+        // recriptografa a senha se ela foi alterada; se senha vier em branco, mantém a senha antiga
+        if (dto.senha() != null && !dto.senha().isBlank()) {
+                usuario.setSenha(passwordEncoder.encode(dto.senha()));
+}
         usuario.setRole(dto.role());
         
         // atualiza as empresas do usuário

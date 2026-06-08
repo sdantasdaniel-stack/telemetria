@@ -12,7 +12,7 @@
 <h:head>
     <title>Mapa de Devices</title>
     <script src="#{request.contextPath}/js/sockjs.min.js"></script>
-	<script src="#{request.contextPath}/js/stomp.min.js"></script>
+    <script src="#{request.contextPath}/js/stomp.min.js"></script>
     <style>
         #mapa { height: 600px; width: 100%; margin-top: 16px; }
         .info-sem-devices { padding: 20px; color: #666; }
@@ -51,8 +51,10 @@
     <span id="devicesData" style="display:none">#{mapaBean.devicesJson}</span>
 
     <script>
+    //<![CDATA[
         var markers = {};
         var infoWindows = {};
+        var map;
 
         function getIcone(status) {
             return status === 'ONLINE'
@@ -83,7 +85,7 @@
                 centro = { lat: devices[0].lat, lng: devices[0].lng };
             }
 
-            var map = new google.maps.Map(document.getElementById('mapa'), {
+            map = new google.maps.Map(document.getElementById('mapa'), {
                 zoom: 15,
                 center: centro
             });
@@ -113,25 +115,85 @@
             stompClient.debug = null;
 
             stompClient.connect({}, function () {
-            	stompClient.subscribe('/topic/devices', function (message) {
-            		
-            		console.log('>>> mensagem recebida no /topic/devices:', message.body);
-            		
-            	    if (message.body === 'reload') {
-            	        window.location.reload();
-            	        return;
-            	    }
+                stompClient.subscribe('/topic/devices', function (message) {
+                    console.log('>>> mensagem recebida:', message.body);
 
-            	    var update = JSON.parse(message.body);
-            	    var entry = markers[update.id];
-            	    if (entry) {
-            	        entry.data.status = update.status;
-            	        entry.marker.setIcon(getIcone(update.status));
-            	        infoWindows[update.id].setContent(getConteudoInfoWindow(entry.data));
-            	    }
-            	});
+                    var update;
+                    try {
+                        update = JSON.parse(message.body);
+                    } catch(e) {
+                        console.warn('Mensagem inválida:', message.body);
+                        return;
+                    }
+
+                    var tipo = update.tipo;
+
+                    // STATUS ONLINE / OFFLINE
+                    if (tipo === 'status') {
+                        var entry = markers[update.id];
+                        if (entry) {
+                            entry.data.status = update.status;
+                            entry.marker.setIcon(getIcone(update.status));
+                            infoWindows[update.id].setContent(getConteudoInfoWindow(entry.data));
+                        }
+                        return;
+                    }
+
+                    // DEVICE EDITADO ou REATIVADO (payload completo)
+                    if (tipo === 'editado' || tipo === 'reativado') {
+                        var entry = markers[update.id];
+
+                        // não estava no mapa mas agora tem coords e está ativo → cria pin
+                        if (!entry && update.lat != null && update.lng != null && update.ativo) {
+                            var novoMarker = new google.maps.Marker({
+                                position: { lat: update.lat, lng: update.lng },
+                                map: map,
+                                title: update.nome,
+                                icon: getIcone(update.status)
+                            });
+                            var novoInfo = new google.maps.InfoWindow({
+                                content: getConteudoInfoWindow(update)
+                            });
+                            markers[update.id] = { marker: novoMarker, data: update };
+                            infoWindows[update.id] = novoInfo;
+                            novoMarker.addListener('click', (function(m, iw) {
+                                return function() { iw.open(map, m); };
+                            })(novoMarker, novoInfo));
+                            return;
+                        }
+
+                        if (!entry) return;
+
+                        if (update.lat != null && update.lng != null) {
+                            entry.marker.setPosition({ lat: update.lat, lng: update.lng });
+                        }
+
+                        entry.data.nome          = update.nome;
+                        entry.data.identificador = update.identificador;
+                        entry.data.status        = update.status;
+                        entry.data.lat           = update.lat;
+                        entry.data.lng           = update.lng;
+
+                        entry.marker.setIcon(getIcone(update.status));
+                        entry.marker.setTitle(update.nome);
+                        infoWindows[update.id].setContent(getConteudoInfoWindow(entry.data));
+                        return;
+                    }
+
+                    // DESATIVADO ou DELETADO → remove o pin
+                    if (tipo === 'desativado' || tipo === 'deletado') {
+                        var entry = markers[update.id];
+                        if (entry) {
+                            entry.marker.setMap(null);
+                            delete markers[update.id];
+                            delete infoWindows[update.id];
+                        }
+                        return;
+                    }
+                });
             });
         }
+    //]]>
     </script>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=#{mapaBean.googleMapsApiKey}&amp;callback=initMap"
