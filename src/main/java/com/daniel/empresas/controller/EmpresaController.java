@@ -22,6 +22,8 @@ import com.daniel.empresas.service.EmpresaService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import com.daniel.empresas.model.Usuario;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 // marca a classe como Controller REST — recebe requisições HTTP e retorna JSON
 @RestController
@@ -57,9 +59,10 @@ public class EmpresaController {
     // USER não deve ver empresas inativas
     @GetMapping("/ativas")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<EmpresaResponseDTO>> listarAtivas() {
-        return ResponseEntity.ok(empresaService.listarAtivas());
-    }
+    public ResponseEntity<List<EmpresaResponseDTO>> listarAtivas(
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(empresaService.listarAtivasPorUsuario(usuario));
+}
 
     // responde GET /empresas/{id} — retorna uma empresa pelo ID — apenas ADMIN
     // @PathVariable extrai o valor {id} da URL e passa para o parâmetro id

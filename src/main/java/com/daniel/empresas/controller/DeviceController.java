@@ -61,9 +61,10 @@ public class DeviceController {
     // USER não deve ver devices inativos
     @GetMapping("/ativos")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<DeviceResponseDTO>> listarAtivos() {
-        return ResponseEntity.ok(deviceService.listarAtivos());
-    }
+    public ResponseEntity<List<DeviceResponseDTO>> listarAtivos(
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(deviceService.listarAtivosPorUsuario(usuario));
+}
 
     // responde GET /devices/{id} — retorna um device pelo ID — apenas ADMIN
     // @PathVariable extrai o valor {id} da URL e passa para o parâmetro id

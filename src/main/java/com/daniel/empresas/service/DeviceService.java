@@ -11,7 +11,9 @@ import com.daniel.empresas.exception.EmpresaNaoEncontradaException;
 import com.daniel.empresas.exception.EstadoInvalidoException;
 import com.daniel.empresas.exception.IdentificadorJaCadastradoException;
 import com.daniel.empresas.model.Device;
+import com.daniel.empresas.model.Empresa;
 import com.daniel.empresas.model.StatusEnum;
+import com.daniel.empresas.model.Usuario;
 import com.daniel.empresas.repository.DeviceRepository;
 import com.daniel.empresas.repository.EmpresaRepository;
 import com.daniel.empresas.websocket.DeviceNotificador;
@@ -198,9 +200,24 @@ public class DeviceService {
     public List<DeviceResponseDTO> listarAtivos() {
     	return deviceRepository.findAll()
     			.stream()
-    			.filter(Device::isAtivo)
+    			.filter(d -> d.isAtivo() && d.getEmpresa() != null && d.getEmpresa().isAtivo())
     			.map(this::toDTO)
     			.toList();
+    }
+
+    public List<DeviceResponseDTO> listarAtivosPorUsuario(Usuario usuario) {
+    List<Long> empresasDoUsuario = usuario.getEmpresas().stream()
+            .filter(Empresa::isAtivo)
+            .map(Empresa::getId)
+            .toList();
+
+    return deviceRepository.findAll()
+            .stream()
+            .filter(d -> d.isAtivo()
+                    && d.getEmpresa() != null
+                    && empresasDoUsuario.contains(d.getEmpresa().getId()))
+            .map(this::toDTO)
+            .toList();
     }
 
     // deleta o device permanentemente do banco
