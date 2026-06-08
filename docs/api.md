@@ -1,6 +1,6 @@
 # Documentação da API 
 
-**Base URL:** `http://localhost:8080/empresas`  
+**Base URL:** `http://localhost:8080/sistema`  
 **Header obrigatório** (exceto login): `Authorization: Bearer {token}`
 
 ---
