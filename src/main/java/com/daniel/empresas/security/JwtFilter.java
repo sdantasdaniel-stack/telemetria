@@ -39,15 +39,18 @@ public class JwtFilter extends OncePerRequestFilter {
     // UsuarioRepository é injetado pelo spring através do @RequiredArgsConstructor — usado para buscar o usuário no banco
     private final UsuarioRepository usuarioRepository;
 
-    // anotação usada para sobreescrever método da classe pai
-    @Override
+    
     
     // método onde você define a lógica de interceptação para cada requisição HTTP que chega à sua aplicação
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+        throws ServletException, IOException {
 
-        // Extrai o token do cabeçalho Authorization da requisição
-        var token = recoverToken(request);
+    // linha temporária para debug — remover depois
+    System.out.println(">>> PATH: " + request.getRequestURI() + " | ServletPath: " + request.getServletPath());
+
+    var token = recoverToken(request);
+    // ... resto do código
 
         // Se não encontrou token no cabeçalho, tenta buscar no cookie jwt-token
         // Isso cobre as requisições feitas pelos Beans do PrimeFaces que usam cookie em vez de cabeçalho

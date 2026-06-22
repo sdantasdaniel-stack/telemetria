@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+
+    <f:metadata>
+        <f:event type="preRenderView" listener="#{importarDevicesBean.carregar}" />
+    </f:metadata>
+
+    <h:head>
+        <title>Importar Dispositivos</title>
+    </h:head>
+
+    <h:body>
+        <h:form id="formImportar" enctype="multipart/form-data" multipart="true">
+
+            <p:growl id="growl" showDetail="true" sticky="false" />
+
+            <h1>Importar Dispositivos</h1>
+            <p>Importe e cadastre dispositivos e pontos de iluminação na plataforma.</p>
+
+            <div class="p-grid">
+
+                <!-- Card: Importar dispositivos — FUNCIONAL (JSON, CSV ou TXT) -->
+                <div class="p-col-12 p-md-6">
+                <p:panel header="Importar dispositivos">
+                    <p>Arquivo com campos: <strong>nome, identificador, empresaId</strong></p>
+                    <p>Formatos aceitos: JSON, CSV ou TXT</p>
+                <p:fileUpload id="uploadDispositivos"
+                      mode="simple"
+                      value="#{importarDevicesBean.arquivoDispositivos}"
+                      allowTypes="/(\.|\/)(json|csv|txt)$/"
+                      skinSimple="true"
+                      maxFileSize="5000000"/>
+                <p:commandButton value="Importar"
+                         icon="pi pi-upload"
+                         action="#{importarDevicesBean.importarDispositivos}"
+                         update="growl formImportar:tabelaDevices"
+                         ajax="true"
+                         style="margin-top: 10px;" />
+                </p:panel>
+            </div>
+
+                <!-- Card: Cadastrar dispositivos CSV — PENDENTE -->
+                <div class="p-col-12 p-md-6">
+                    <p:panel header="Cadastrar dispositivos">
+                        <p>CSV</p>
+                        <p:fileUpload mode="advanced" auto="false" dragDropSupport="true"
+                                      label="Escolher arquivo" uploadLabel="Enviar" cancelLabel="Cancelar"
+                                      allowTypes="/(\.|\/)(csv)$/"
+                                      fileUploadListener="#{importarDevicesBean.uploadPendente}"
+                                      update="growl" maxFileSize="5000000" />
+                    </p:panel>
+                </div>
+
+                <!-- Card: Pré-cadastro por serial TXT — PENDENTE -->
+                <div class="p-col-12 p-md-6">
+                    <p:panel header="Pré-cadastro por serial">
+                        <p>TXT</p>
+                        <p:fileUpload mode="advanced" auto="false" dragDropSupport="true"
+                                      label="Escolher arquivo" uploadLabel="Enviar" cancelLabel="Cancelar"
+                                      allowTypes="/(\.|\/)(txt)$/"
+                                      fileUploadListener="#{importarDevicesBean.uploadPendente}"
+                                      update="growl" maxFileSize="5000000" />
+                    </p:panel>
+                </div>
+
+                <!-- Card: Marcar MQE — PENDENTE -->
+                <div class="p-col-12 p-md-6">
+                    <p:panel header="Marcar MQE por serial">
+                        <p>TXT</p>
+                        <p:fileUpload mode="advanced" auto="false" dragDropSupport="true"
+                                      label="Escolher arquivo" uploadLabel="Enviar" cancelLabel="Cancelar"
+                                      allowTypes="/(\.|\/)(txt)$/"
+                                      fileUploadListener="#{importarDevicesBean.uploadPendente}"
+                                      update="growl" maxFileSize="5000000" />
+                    </p:panel>
+                </div>
+
+                <!-- Card: Cadastrar pontos CSV — PENDENTE -->
+                <div class="p-col-12 p-md-6">
+                    <p:panel header="Cadastrar pontos">
+                        <p>CSV</p>
+                        <p:fileUpload mode="advanced" auto="false" dragDropSupport="true"
+                                      label="Escolher arquivo" uploadLabel="Enviar" cancelLabel="Cancelar"
+                                      allowTypes="/(\.|\/)(csv)$/"
+                                      fileUploadListener="#{importarDevicesBean.uploadPendente}"
+                                      update="growl" maxFileSize="5000000" />
+                    </p:panel>
+                </div>
+
+                <!-- Card: Cadastrar pontos Excel — PENDENTE -->
+                <div class="p-col-12 p-md-6">
+                    <p:panel header="Cadastrar pontos">
+                        <p>Excel (.xlsx)</p>
+                        <p:fileUpload mode="advanced" auto="false" dragDropSupport="true"
+                                      label="Escolher arquivo" uploadLabel="Enviar" cancelLabel="Cancelar"
+                                      allowTypes="/(\.|\/)(xls|xlsx)$/"
+                                      fileUploadListener="#{importarDevicesBean.uploadPendente}"
+                                      update="growl" maxFileSize="5000000" />
+                    </p:panel>
+                </div>
+
+                <!-- Card: Cadastrar pontos STG — PENDENTE -->
+                <div class="p-col-12 p-md-6">
+                    <p:panel header="Cadastrar pontos STG">
+                        <p>XLS</p>
+                        <p:fileUpload mode="advanced" auto="false" dragDropSupport="true"
+                                      label="Escolher arquivo" uploadLabel="Enviar" cancelLabel="Cancelar"
+                                      allowTypes="/(\.|\/)(xls)$/"
+                                      fileUploadListener="#{importarDevicesBean.uploadPendente}"
+                                      update="growl" maxFileSize="5000000" />
+                    </p:panel>
+                </div>
+
+                <!-- Card: Importar SLF — PENDENTE -->
+                <div class="p-col-12 p-md-6">
+                    <p:panel header="Importar SLF">
+                        <p>CSV</p>
+                        <p:fileUpload mode="advanced" auto="false" dragDropSupport="true"
+                                      label="Escolher arquivo" uploadLabel="Enviar" cancelLabel="Cancelar"
+                                      allowTypes="/(\.|\/)(csv)$/"
+                                      fileUploadListener="#{importarDevicesBean.uploadPendente}"
+                                      update="growl" maxFileSize="5000000" />
+                    </p:panel>
+                </div>
+
+                <!-- Card: Associar IMEI — PENDENTE -->
+                <div class="p-col-12 p-md-6">
+                    <p:panel header="Associar IMEI">
+                        <p>CSV</p>
+                        <p:fileUpload mode="advanced" auto="false" dragDropSupport="true"
+                                      label="Escolher arquivo" uploadLabel="Enviar" cancelLabel="Cancelar"
+                                      allowTypes="/(\.|\/)(csv)$/"
+                                      fileUploadListener="#{importarDevicesBean.uploadPendente}"
+                                      update="growl" maxFileSize="5000000" />
+                    </p:panel>
+                </div>
+
+            </div>
+
+            <!-- Tabela de devices importados -->
+            <p:panel header="Devices cadastrados" style="margin-top: 20px;">
+                <p:dataTable id="tabelaDevices"
+                             value="#{importarDevicesBean.devices}"
+                             var="d"
+                             paginator="true"
+                             rows="10"
+                             emptyMessage="Nenhum device cadastrado ainda.">
+                    <p:column headerText="ID">
+                        <h:outputText value="#{d.id}" />
+                    </p:column>
+                    <p:column headerText="Nome">
+                        <h:outputText value="#{d.nome}" />
+                    </p:column>
+                    <p:column headerText="Identificador">
+                        <h:outputText value="#{d.identificador}" />
+                    </p:column>
+                    <p:column headerText="Empresa">
+                        <h:outputText value="#{d.empresaNome}" />
+                    </p:column>
+                </p:dataTable>
+            </p:panel>
+
+        </h:form>
+    </h:body>
+
+</ui:composition>
