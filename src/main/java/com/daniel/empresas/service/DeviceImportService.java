@@ -27,27 +27,15 @@ public class DeviceImportService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public DeviceImportService(DeviceRepository deviceRepository,
-                            EmpresaRepository empresaRepository) {
-            this.deviceRepository = deviceRepository;
-            this.empresaRepository = empresaRepository;
+                               EmpresaRepository empresaRepository) {
+        this.deviceRepository = deviceRepository;
+        this.empresaRepository = empresaRepository;
     }
-
-    // -------------------------------------------------------------------------
-    // Cadastro de um único device (usado pelo card de serial — lógica reutilizável)
-    // -------------------------------------------------------------------------
-
-    /**
-     * Cadastra um único device a partir de um DTO.
-     * Lança IllegalArgumentException se:
-     *   - algum campo obrigatório estiver vazio
-     *   - o identificador já existir
-     *   - a empresa não existir
-     */
 
     public List<DeviceImportResponseDTO> listarTodos() {
         return deviceRepository.findAll().stream()
-            .map(DeviceImportResponseDTO::fromEntity)
-            .toList();
+                .map(DeviceImportResponseDTO::fromEntity)
+                .toList();
     }
 
     public DeviceImportResponseDTO cadastrar(DeviceImportRequestDTO dto) {
@@ -72,13 +60,6 @@ public class DeviceImportService {
         return DeviceImportResponseDTO.fromEntity(deviceRepository.save(device));
     }
 
-    // -------------------------------------------------------------------------
-    // Importação via arquivo (CSV, TXT ou JSON)
-    // -------------------------------------------------------------------------
-
-    /**
-     * Processa o arquivo recebido e delega para o parser adequado conforme extensão.
-     */
     public ResultadoImportacao importarArquivo(InputStream inputStream,
                                                String nomeArquivo) throws IOException {
         String extensao = extensao(nomeArquivo);
@@ -89,10 +70,6 @@ public class DeviceImportService {
                     "Formato não suportado: " + extensao + ". Use JSON, CSV ou TXT.");
         };
     }
-
-    // -------------------------------------------------------------------------
-    // Parsers internos
-    // -------------------------------------------------------------------------
 
     private ResultadoImportacao importarCsvOuTxt(InputStream inputStream) throws IOException {
         List<String> erros = new ArrayList<>();
@@ -106,9 +83,14 @@ public class DeviceImportService {
             boolean primeiraLinha = true;
 
             while ((linha = reader.readLine()) != null) {
+                // remove BOM (byte order mark) que o Windows/Excel adiciona no início do arquivo
+                if (primeiraLinha) {
+                    linha = linha.replace("\uFEFF", "");
+                }
+
                 if (linha.isBlank()) continue;
 
-                // pula cabeçalho se a primeira linha contiver "nome" ou "identificador"
+                // pula cabeçalho se a primeira linha contiver "nome"
                 if (primeiraLinha && linha.toLowerCase().contains("nome")) {
                     primeiraLinha = false;
                     continue;
@@ -122,9 +104,10 @@ public class DeviceImportService {
                     continue;
                 }
 
-                String nome = colunas[0].trim();
-                String identificador = colunas[1].trim();
-                String empresaIdRaw = colunas[2].trim();
+                // limpa aspas e espaços de cada coluna — cobre arquivos gerados pelo Excel
+                String nome = limpar(colunas[0]);
+                String identificador = limpar(colunas[1]);
+                String empresaIdRaw = limpar(colunas[2]);
 
                 try {
                     Long empresaId = Long.parseLong(empresaIdRaw);
@@ -162,10 +145,6 @@ public class DeviceImportService {
         return new ResultadoImportacao(totalLinhas, sucesso, erros);
     }
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
     private void validarCampos(DeviceImportRequestDTO dto) {
         if (dto.nome() == null || dto.nome().isBlank())
             throw new IllegalArgumentException("O nome é obrigatório");
@@ -180,9 +159,16 @@ public class DeviceImportService {
         return nomeArquivo.substring(nomeArquivo.lastIndexOf('.') + 1).toLowerCase();
     }
 
-    // -------------------------------------------------------------------------
-    // DTO de resultado
-    // -------------------------------------------------------------------------
+    /**
+     * Remove aspas duplas, BOM e espaços extras de um valor CSV.
+     * Cobre arquivos gerados pelo Excel e pelo Notepad do Windows.
+     */
+    private String limpar(String valor) {
+        if (valor == null) return "";
+        return valor.trim()
+                .replace("\"", "")
+                .replace("\uFEFF", "");
+    }
 
     public record ResultadoImportacao(int totalLinhas, int sucesso, List<String> erros) {
         public int getFalhas() {
